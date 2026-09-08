@@ -1,0 +1,5 @@
+# Crypto
+ro.security.keystore.keytype=sak,gak
+ro.hardware.keystore=mdfpp
+ro.hardware.gatekeeper=mdfpp
+#
