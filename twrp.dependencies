@@ -11,5 +11,12 @@
     "repository": "android_device_qcom_twrp-common",
     "target_path": "device/qcom/twrp-common",
     "branch": "android-12.1"
+  },
+  
+  {
+    "remote": "github",
+    "repository": "a9y18qlte-open/android_kernel_samsung_a9y18qlte",
+    "target_path": "kernel/samsung/a9y18qlte",
+    "branch": "lineage-19.1"
   }
 ]
