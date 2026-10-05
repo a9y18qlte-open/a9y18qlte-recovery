@@ -1,0 +1,29 @@
+diff --git a/Decrypt.cpp b/Decrypt.cpp
+index d9f034b..38ab945 100755
+--- a/Decrypt.cpp
++++ b/Decrypt.cpp
+@@ -192,6 +192,7 @@ extern "C" bool Decrypt_DE() {
+ 		printf("fscrypt_init_user0 returned fail\n");
+ 		return false;
+ 	}
++	android::keystore::copySqliteDb();
+ 	return true;
+ }
+ 
+@@ -434,6 +435,8 @@ namespace keystore {
+ 		dstof << srcif.rdbuf();
+ 		srcif.close();
+ 		dstof.close();
++		property_set("ctl.restart", "keystore2");
++		usleep(300000);
+ 	}
+ 
+ 	/* C++ replacement for function of the same name
+@@ -664,6 +667,7 @@ bool Decrypt_User_Synth_Pass(const userid_t user_id, const std::string& Password
+ 	// printf("pwd N %i R %i P %i salt ", pwd.scryptN, pwd.scryptR, pwd.scryptP); output_hex((char*)pwd.salt, pwd.salt_len); printf("\n");
+ 	// printf("Password: '%s'\n", Password.c_str());
+ 	// The password token is the password scrypted with the parameters from the password data file
++	android::keystore::copySqliteDb();
+ 	unsigned char password_token[PASSWORD_TOKEN_SIZE];
+ 	if (Password != "!") {
+ 		if (!Get_Password_Data(spblob_path, handle_str, &pwd)) {

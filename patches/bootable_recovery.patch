@@ -1,0 +1,16 @@
+diff --git a/partition.cpp b/partition.cpp
+index 132e89e8..77c82eb2 100644
+--- a/partition.cpp
++++ b/partition.cpp
+@@ -833,9 +833,9 @@ if (TWFunc::Path_Exists("/data/unencrypted/key/version")) {
+ 	ExcludeAll(Mount_Point + "/cache");
+ 	ExcludeAll(Mount_Point + "/per_boot"); // removed each boot by init
+ 	ExcludeAll(Mount_Point + "/gsi"); // cow devices
+-	int retry_count = 3;
++	int retry_count = 60;
+ 	while (!android::keystore::Decrypt_DE() && --retry_count)
+-		usleep(2000);
++		usleep(100000);
+ 	if (retry_count > 0) {
+ 		PartitionManager.Set_Crypto_State();
+ 		Is_Encrypted = true;
