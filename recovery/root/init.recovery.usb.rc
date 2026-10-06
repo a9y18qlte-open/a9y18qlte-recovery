@@ -36,6 +36,7 @@ on boot
     write /config/usb_gadget/g1/strings/0x409/serialnumber ${ro.serialno}
     write /config/usb_gadget/g1/strings/0x409/manufacturer ${ro.product.manufacturer}
     write /config/usb_gadget/g1/strings/0x409/product ${ro.product.model}
+    write /config/usb_gadget/g1/bMaxPacketSize0 0x40
     mkdir /config/usb_gadget/g1/functions/mass_storage.0
     mkdir /config/usb_gadget/g1/functions/mtp.gs0
     mkdir /config/usb_gadget/g1/functions/ptp.gs1
