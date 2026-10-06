@@ -36,3 +36,6 @@ OF_DEFAULT_KEYMASTER_VERSION := 3.0
 
 # battery
 OF_USE_LEGACY_BATTERY_SERVICES := 1
+
+# maintainer
+OF_MAINTAINER := James Nguyen
