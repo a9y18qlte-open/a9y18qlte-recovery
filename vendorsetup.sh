@@ -37,7 +37,8 @@ export FOX_DELETE_AROMAFM=1
 export FOX_USE_BUSYBOX_BINARY=1
 export FOX_SETTINGS_ROOT_DIRECTORY=/data/recovery
 export FOX_USE_NANO_EDITOR=1
-#
+export FOX_MAINTAINER_PATCH_VERSION=1
 
 # Apply FBE decryption patches to core repositories if needed
 bash "$(dirname "${BASH_SOURCE[0]}")/apply-patches.sh"
+#
