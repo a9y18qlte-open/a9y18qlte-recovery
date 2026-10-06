@@ -1,0 +1,42 @@
+diff --git a/openrecoveryscript.cpp b/openrecoveryscript.cpp
+index ede99946..fbe30b0d 100755
+--- a/openrecoveryscript.cpp
++++ b/openrecoveryscript.cpp
+@@ -418,16 +418,17 @@ int OpenRecoveryScript::run_script_file(void) {
+ 
+ 				// ret_val = apply_from_adb("/", &sideload_child_pid);
+ 				Device::BuiltinAction reboot_action = Device::REBOOT_BOOTLOADER;
++				// twrp_sideload() installs the package itself while the host is still
++				// serving it, as for GUIAction::adbsideload(). Installing it again from
++				// FUSE_SIDELOAD_HOST_PATHNAME here, after the session has ended, made the
++				// recovery restart with "sideload" still in the script file.
+ 				ret_val = twrp_sideload("/", &reboot_action);
+ 				if (ret_val != 0) {
+ 					if (ret_val == -2)
+ 						gui_err("need_new_adb=You need adb 1.0.32 or newer to sideload to this device.");
+ 					ret_val = 1; // failure
+-				} else if (TWinstall_zip(FUSE_SIDELOAD_HOST_PATHNAME, &wipe_cache) == 0) {
+-					if (wipe_cache)
+-						PartitionManager.Wipe_By_Path("/cache");
+-				} else {
+-					ret_val = 1; // failure
++				} else if (wipe_cache || DataManager::GetIntValue("tw_wipe_cache")) {
++					PartitionManager.Wipe_By_Path("/cache");
+ 				}
+ 				PartitionManager.Unlock_Block_Partitions();
+ 				PartitionManager.Update_System_Details();
+diff --git a/twrpinstall/adb_install.cpp b/twrpinstall/adb_install.cpp
+index d9a517f0..268b2394 100755
+--- a/twrpinstall/adb_install.cpp
++++ b/twrpinstall/adb_install.cpp
+@@ -336,7 +336,9 @@ static void CreateMinadbdServiceAndExecuteCommands(
+     }
+   }
+ 
+-  signal(SIGPIPE, SIG_DFL);
++  // Leave SIGPIPE ignored: TWRP ignores it from startup (twrp.cpp). Restoring the
++  // default here made the recovery die when it wrote the result of a `twrp sideload`
++  // CLI command, whose client went away with adbd when sideload mode started.
+ }
+ 
+   int twrp_sideload(const char* install_file, Device::BuiltinAction* reboot_action) {
