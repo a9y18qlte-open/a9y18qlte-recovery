@@ -1,0 +1,17 @@
+diff --git a/gui/gui.cpp b/gui/gui.cpp
+index e03fe91f..699f3351 100644
+--- a/gui/gui.cpp
++++ b/gui/gui.cpp
+@@ -632,7 +632,11 @@ static void ors_command_read()
+ 			unlink(ORS_OUTPUT_FILE);
+ 			return;
+ 		}
+-		if (DataManager::GetIntValue("tw_busy") != 0) {
++		// A command queued while another threaded action runs is rejected by
++		// GUIAction without calling ors_command_done(): the client would never get
++		// an answer and the listener would stay closed. Refuse it here instead.
++		if (DataManager::GetIntValue("tw_busy") != 0 ||
++		    DataManager::GetIntValue("tw_action_thread_running") != 0) {
+ 			fputs("Failed, operation in progress\n", orsout);
+ 			LOGINFO("Command cannot be performed, operation in progress.\n");
+ 			fclose(orsout);
