@@ -1,0 +1,31 @@
+diff --git a/partition.cpp b/partition.cpp
+--- a/partition.cpp
++++ b/partition.cpp
+@@ -1782,6 +1782,13 @@
+ 
+ bool TWPartition::Bind_Mount(bool Display_Error) {
+ 	if (TWFunc::Path_Exists(Symlink_Path)) {
++		// Mounting /data again after decryption would stack a second bind on
++		// /sdcard, and UnMount() used to remove only one, which left the block
++		// device mounted and made formatting it fail.
++		struct stat st1, st2;
++		if (stat(Symlink_Mount_Point.c_str(), &st1) == 0 &&
++				stat((Symlink_Mount_Point + "/..").c_str(), &st2) == 0 && st1.st_dev != st2.st_dev)
++			return true;
+ 		if (mount(Symlink_Path.c_str(), Symlink_Mount_Point.c_str(), "", MS_BIND, NULL) < 0) {
+ 			return false;
+ 		}
+@@ -1800,8 +1807,11 @@
+ 		if (Is_Storage && MTP_Storage_ID > 0)
+ 			PartitionManager.Remove_MTP_Storage(MTP_Storage_ID);
+ 
+-		if (!Symlink_Mount_Point.empty())
+-			umount2(Symlink_Mount_Point.c_str(), flags);
++		if (!Symlink_Mount_Point.empty()) {
++			// Remove every bind stacked on the symlink mount point.
++			for (int i = 0; i < 10 && umount2(Symlink_Mount_Point.c_str(), flags) == 0; i++)
++				;
++		}
+ 
+ 		umount2(Mount_Point.c_str(), flags);
+ 		if (Is_Mounted()) {
