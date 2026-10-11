@@ -1,0 +1,14 @@
+diff --git a/startupArgs.cpp b/startupArgs.cpp
+--- a/startupArgs.cpp
++++ b/startupArgs.cpp
+@@ -74,6 +74,10 @@ bool startupArgs::processRecoveryArgs(std::vector<std::string> args, int index)
+ 				Send_Intent = arg;
+ 			}
+ 		} else if (args[index].find(WIPE_DATA) != std::string::npos) {
++			// A factory reset from Android must not wait for the user to
++			// decrypt /data: queued scripts only run once storage is
++			// decrypted, so skipping the PIN prompt dropped the wipe.
++			SkipDecryption = true;
+ 			#ifdef OF_VAB_ORS_WIPE_DATA_IS_FORMAT
+ 				LOGINFO("Received OpenRecovery 'wipe data' command; converting to 'format data'\n");
+ 				if (!OpenRecoveryScript::Insert_ORS_Command("format data\n"))
