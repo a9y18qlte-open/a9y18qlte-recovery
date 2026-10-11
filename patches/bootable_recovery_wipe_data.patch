@@ -1,0 +1,26 @@
+diff --git a/startupArgs.cpp b/startupArgs.cpp
+index 058bc404..754bd03e 100755
+--- a/startupArgs.cpp
++++ b/startupArgs.cpp
+@@ -74,13 +74,14 @@ bool startupArgs::processRecoveryArgs(std::vector<std::string> args, int index)
+ 				Send_Intent = arg;
+ 			}
+ 		} else if (args[index].find(WIPE_DATA) != std::string::npos) {
+-			#ifdef OF_VAB_ORS_WIPE_DATA_IS_FORMAT
+-				LOGINFO("Received OpenRecovery 'wipe data' command; converting to 'format data'\n");
+-				if (!OpenRecoveryScript::Insert_ORS_Command("format data\n"))
+-			#else
+-				LOGINFO("Received OpenRecovery 'wipe data' command.\n");
+-				if (!OpenRecoveryScript::Insert_ORS_Command("wipe data\n"))
+-			#endif
++			// A factory reset from Android must not wait for the user to
++			// decrypt /data: queued scripts only run once storage is
++			// decrypted, so skipping the PIN prompt dropped the wipe.
++			// Formatting needs no keys, and like the stock recovery it
++			// also erases the FBE-encrypted internal storage.
++			SkipDecryption = true;
++			LOGINFO("Received OpenRecovery 'wipe data' command; converting to 'format data'\n");
++			if (!OpenRecoveryScript::Insert_ORS_Command("format data\n"))
+ 				return false;
+ 		} else if (args[index].find(WIPE_CACHE) != std::string::npos) {
+ 			if (!OpenRecoveryScript::Insert_ORS_Command("wipe cache\n"))
