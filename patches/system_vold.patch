@@ -1,5 +1,5 @@
 diff --git a/Decrypt.cpp b/Decrypt.cpp
-index d9f034b..38ab945 100755
+index d9f034b..d35a57b 100755
 --- a/Decrypt.cpp
 +++ b/Decrypt.cpp
 @@ -192,6 +192,7 @@ extern "C" bool Decrypt_DE() {
@@ -10,20 +10,71 @@ index d9f034b..38ab945 100755
  	return true;
  }
  
-@@ -434,6 +435,8 @@ namespace keystore {
+@@ -424,16 +425,34 @@ namespace keystore {
+ 		}
+ 	}
+ 
++	static bool sDbCopied = false;
+ 	void copySqliteDb() {
++		if (sDbCopied) {
++			return;
++		}
++		struct stat st;
+ 		std::string keystore_path = "/tmp/misc/keystore/";
+ 		std::string dst = keystore_path + "persistent.sqlite";
+ 		std::string src = "/data/misc/keystore/persistent.sqlite";
++		if (stat(src.c_str(), &st) != 0) {
++			return;
++		}
++		printf("copying '%s' to '%s'\n", src.c_str(), dst.c_str());
+ 		std::ifstream srcif(src.c_str(), std::ios::binary);
+ 		std::ofstream dstof(dst.c_str(), std::ios::binary);
+-		printf("copying '%s' to '%s'\n", src.c_str(), dst.c_str());
  		dstof << srcif.rdbuf();
  		srcif.close();
  		dstof.close();
++		sDbCopied = true;
 +		property_set("ctl.restart", "keystore2");
-+		usleep(300000);
++		usleep(200000);
++		for (int i = 0; i < 50; ++i) {
++			::ndk::SpAIBinder testBinder(AServiceManager_checkService("android.system.keystore2.IKeystoreService/default"));
++			if (testBinder.get() != nullptr) {
++				break;
++			}
++			usleep(100000);
++		}
  	}
  
  	/* C++ replacement for function of the same name
-@@ -664,6 +667,7 @@ bool Decrypt_User_Synth_Pass(const userid_t user_id, const std::string& Password
- 	// printf("pwd N %i R %i P %i salt ", pwd.scryptN, pwd.scryptR, pwd.scryptP); output_hex((char*)pwd.salt, pwd.salt_len); printf("\n");
- 	// printf("Password: '%s'\n", Password.c_str());
- 	// The password token is the password scrypted with the parameters from the password data file
-+	android::keystore::copySqliteDb();
- 	unsigned char password_token[PASSWORD_TOKEN_SIZE];
- 	if (Password != "!") {
- 		if (!Get_Password_Data(spblob_path, handle_str, &pwd)) {
+@@ -502,8 +521,19 @@ namespace keystore {
+ 				.Authorization(::keymint::TAG_MAC_LENGTH, maclen);
+ 
+ 			ks2::KeyEntryResponse keyEntryResponse;
+-			::ndk::SpAIBinder keystoreBinder(AServiceManager_checkService("android.system.keystore2.IKeystoreService/default"));
++			::ndk::SpAIBinder keystoreBinder(AServiceManager_waitForService("android.system.keystore2.IKeystoreService/default"));
++			if (keystoreBinder.get() == nullptr) {
++				for (int retry = 0; retry < 50; ++retry) {
++					keystoreBinder = ::ndk::SpAIBinder(AServiceManager_checkService("android.system.keystore2.IKeystoreService/default"));
++					if (keystoreBinder.get() != nullptr) break;
++					usleep(100000);
++				}
++			}
+ 			auto keystore = ks2::IKeystoreService::fromBinder(keystoreBinder);
++			if (keystore == nullptr) {
++				printf("Failed to connect to keystore2 service\n");
++				return disk_decryption_secret_key;
++			}
+ 			auto rc = keystore->getKeyEntry(keyDescriptor(keystore_alias), &keyEntryResponse);
+ 			if (!rc.isOk()) {
+ 				auto error = unwrapError(rc);
+@@ -797,8 +827,9 @@ bool Decrypt_User_Synth_Pass(const userid_t user_id, const std::string& Password
+ 											if (service == NULL) {
+ 												printf("error: could not connect to keystore service\n");
+ 												ALOGE("error: could not connect to keystore service\n");
++											} else {
++												auto binder_result = service->addAuthToken(authToken);
+ 											}
+-											auto binder_result = service->addAuthToken(authToken);
+ 										}
+ 									}
+ 								 );
