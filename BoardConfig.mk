@@ -40,10 +40,16 @@ ENABLE_CPUSETS := true
 ENABLE_SCHEDBOOST := true
 
 # Kernel
-TARGET_KERNEL_CONFIG := a9y18qlte_eur_open_defconfig
-TARGET_KERNEL_SOURCE := kernel/samsung/a9y18qlte
-TARGET_KERNEL_VERSION := 4.4
+# LineageOS SDM660 4.19 with the a9y18qlte fragment, bind mounted at
+# kernel/samsung/a9y18qlte-4.19; built like kmake419 (clang r416183b, LLVM
+# binutils for the thin LTO build)
+TARGET_KERNEL_CONFIG := vendor/sdm660-perf_defconfig
+TARGET_KERNEL_ADDITIONAL_CONFIG := vendor/a9y18qlte.config
+TARGET_KERNEL_SOURCE := kernel/samsung/a9y18qlte-4.19
+TARGET_KERNEL_VERSION := 4.19
 TARGET_KERNEL_CLANG_COMPILE := true
+TARGET_KERNEL_CLANG_VERSION := r416183b
+TARGET_KERNEL_ADDITIONAL_FLAGS := LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip HOSTCC=clang HOSTCXX=clang++
 #TARGET_KERNEL_CROSS_COMPILE_PREFIX := aarch64-linux-android-
 
 # Kernel
@@ -56,7 +62,7 @@ BOARD_KERNEL_OFFSET := 0x00008000
 BOARD_RAMDISK_OFFSET := 0x02000000
 BOARD_KERNEL_SECOND_OFFSET := 0x00F00000
 BOARD_KERNEL_TAGS_OFFSET := 0x01E00000
-BOARD_KERNEL_CMDLINE := console=ram androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 sched_enable_hmp=1 sched_enable_power_aware=1 service_locator.enable=1 swiotlb=1 firmware_class.path=/vendor/firmware_mnt/image
+BOARD_KERNEL_CMDLINE := console=ram androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 sched_enable_hmp=1 sched_enable_power_aware=1 service_locator.enable=1 firmware_class.path=/vendor/firmware_mnt/image
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 BOARD_MKBOOTIMG_ARGS := --kernel_offset $(BOARD_KERNEL_OFFSET) --ramdisk_offset $(BOARD_RAMDISK_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --tags_offset $(BOARD_KERNEL_TAGS_OFFSET) --second_offset $(BOARD_KERNEL_SECOND_OFFSET)
@@ -112,7 +118,12 @@ TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 TW_BRIGHTNESS_PATH := "/sys/class/leds/lcd-backlight/brightness"
 TW_MAX_BRIGHTNESS := 255
 TW_DEFAULT_BRIGHTNESS := 128
-TW_CUSTOM_BATTERY_PATH := "/sys/devices/battery/power_supply/battery"
+TW_CUSTOM_BATTERY_PATH := "/sys/devices/platform/battery/power_supply/battery"
+# 4.19: FBE keys added with FS_IOC_ADD_ENCRYPTION_KEY die with an unmount, so
+# /data must stay mounted after the DE keys are installed
+# (bootable_recovery_fs_keyring.patch). /data's inlinecrypt option comes from
+# the vendor fstab.
+TW_FBE_KEEP_DATA_MOUNTED := true
 TW_CUSTOM_CPU_TEMP_PATH := "/sys/devices/virtual/thermal/thermal_zone1/temp"
 TW_NO_REBOOT_BOOTLOADER := true
 TW_HAS_DOWNLOAD_MODE := true
