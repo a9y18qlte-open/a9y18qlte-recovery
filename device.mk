@@ -45,7 +45,7 @@ RECOVERY_LIBRARY_SOURCE_FILES += \
     $(TARGET_OUT_SYSTEM_EXT_SHARED_LIBRARIES)/libdisplayconfig.qti.so
 
 # kernel
-  PRODUCT_PROPERTY_OVERRIDES += \
-	ro.orangefox.kernel_ver=4.4
+PRODUCT_PROPERTY_OVERRIDES += \
+	ro.orangefox.kernel_ver=4.19
 
 #

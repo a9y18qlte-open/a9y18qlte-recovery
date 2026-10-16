@@ -15,8 +15,8 @@
   
   {
     "remote": "github",
-    "repository": "a9y18qlte-open/android_kernel_samsung_a9y18qlte",
-    "target_path": "kernel/samsung/a9y18qlte",
-    "branch": "lineage-20-ksu"
+    "repository": "a9y18qlte-open/android_kernel_samsung_a9y18qlte-4.19",
+    "target_path": "kernel/samsung/a9y18qlte-4.19",
+    "branch": "lineage-22.2-4.19-ksu"
   }
 ]
