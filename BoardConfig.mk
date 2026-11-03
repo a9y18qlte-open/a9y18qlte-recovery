@@ -119,9 +119,11 @@ TW_DEFAULT_BRIGHTNESS := 128
 TW_CUSTOM_BATTERY_PATH := "/sys/devices/platform/battery/power_supply/battery"
 # 4.19: FBE keys added with FS_IOC_ADD_ENCRYPTION_KEY die with an unmount, so
 # /data must stay mounted after the DE keys are installed
-# (bootable_recovery_fs_keyring.patch). /data's inlinecrypt option comes from
-# the vendor fstab.
+# (bootable_recovery_fs_keyring.patch).
 TW_FBE_KEEP_DATA_MOUNTED := true
+# 4.19 only decrypts ice contents with /data mounted inlinecrypt, which a 4.4
+# ROM's fstab cannot carry, so add it (bootable_recovery_inlinecrypt.patch).
+TW_FBE_FORCE_INLINECRYPT := true
 TW_CUSTOM_CPU_TEMP_PATH := "/sys/devices/virtual/thermal/thermal_zone1/temp"
 TW_NO_REBOOT_BOOTLOADER := true
 TW_HAS_DOWNLOAD_MODE := true
