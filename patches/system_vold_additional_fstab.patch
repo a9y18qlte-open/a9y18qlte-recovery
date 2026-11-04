@@ -1,15 +1,20 @@
 diff --git a/FsCrypt.cpp b/FsCrypt.cpp
-index 7505e56..a8b2a6a 100644
+index 7505e56..138801d 100644
 --- a/FsCrypt.cpp
 +++ b/FsCrypt.cpp
-@@ -236,13 +236,26 @@ static bool IsEmmcStorage(const std::string& blk_device) {
+@@ -236,13 +236,28 @@ static bool IsEmmcStorage(const std::string& blk_device) {
  
  // Retrieve the options to use for encryption policies on the /data filesystem.
  static bool get_data_file_encryption_options(EncryptionOptions* options) {
--    if (fstab_default.empty()) {
--        if (!ReadDefaultFstab(&fstab_default)) {
--            PLOG(ERROR) << "Failed to open default fstab";
--            return false;
++    // The wrapped key retry in fscrypt_initialize_systemwide_keys() dereferences
++    // the default fstab's /data entry unchecked, so load it either way.
+     if (fstab_default.empty()) {
+         if (!ReadDefaultFstab(&fstab_default)) {
+             PLOG(ERROR) << "Failed to open default fstab";
+             return false;
+         }
+     }
+-    auto entry = GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
 +    // In recovery, /etc/additional.fstab is the installed ROM's own fstab: its
 +    // /data entry has the options the ROM's policies were made with, which the
 +    // recovery's fstab cannot know when it serves ROMs that use different ones.
@@ -22,15 +27,8 @@ index 7505e56..a8b2a6a 100644
 +    if (entry != nullptr) {
 +        LOG(INFO) << "Using /data encryption options from /etc/additional.fstab";
 +    } else {
-+        if (fstab_default.empty()) {
-+            if (!ReadDefaultFstab(&fstab_default)) {
-+                PLOG(ERROR) << "Failed to open default fstab";
-+                return false;
-+            }
-         }
 +        entry = GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
-     }
--    auto entry = GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
++    }
      if (entry == nullptr) {
          LOG(ERROR) << "No mount point entry for " << DATA_MNT_POINT;
          return false;
