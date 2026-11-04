@@ -1,0 +1,36 @@
+diff --git a/FsCrypt.cpp b/FsCrypt.cpp
+index 7505e56..a8b2a6a 100644
+--- a/FsCrypt.cpp
++++ b/FsCrypt.cpp
+@@ -236,13 +236,26 @@ static bool IsEmmcStorage(const std::string& blk_device) {
+ 
+ // Retrieve the options to use for encryption policies on the /data filesystem.
+ static bool get_data_file_encryption_options(EncryptionOptions* options) {
+-    if (fstab_default.empty()) {
+-        if (!ReadDefaultFstab(&fstab_default)) {
+-            PLOG(ERROR) << "Failed to open default fstab";
+-            return false;
++    // In recovery, /etc/additional.fstab is the installed ROM's own fstab: its
++    // /data entry has the options the ROM's policies were made with, which the
++    // recovery's fstab cannot know when it serves ROMs that use different ones.
++    static android::fs_mgr::Fstab rom_fstab;
++    if (rom_fstab.empty() && access("/etc/additional.fstab", R_OK) == 0 &&
++        !android::fs_mgr::ReadFstabFromFile("/etc/additional.fstab", &rom_fstab)) {
++        LOG(WARNING) << "Failed to read /etc/additional.fstab";
++    }
++    auto entry = GetEntryForMountPoint(&rom_fstab, DATA_MNT_POINT);
++    if (entry != nullptr) {
++        LOG(INFO) << "Using /data encryption options from /etc/additional.fstab";
++    } else {
++        if (fstab_default.empty()) {
++            if (!ReadDefaultFstab(&fstab_default)) {
++                PLOG(ERROR) << "Failed to open default fstab";
++                return false;
++            }
+         }
++        entry = GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
+     }
+-    auto entry = GetEntryForMountPoint(&fstab_default, DATA_MNT_POINT);
+     if (entry == nullptr) {
+         LOG(ERROR) << "No mount point entry for " << DATA_MNT_POINT;
+         return false;
