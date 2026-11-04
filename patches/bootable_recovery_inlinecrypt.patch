@@ -13,19 +13,33 @@ index 4345fdfe..677972eb 100755
  	android.security.authorization-ndk_platform \
          android.hardware.oemlock@1.0 libf2fs_sparseblock libbinder libbinder_ndk \
 diff --git a/partition.cpp b/partition.cpp
-index bd010eb2..371cd5ba 100644
+index bd010eb2..808e7dd0 100644
 --- a/partition.cpp
 +++ b/partition.cpp
-@@ -991,6 +991,19 @@ void TWPartition::Apply_TW_Flag(const unsigned flag, const char* str, const bool
+@@ -26,6 +26,7 @@
+ #include <sys/param.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
++#include <sys/utsname.h>
+ #include <sys/vfs.h>
+ #include <unistd.h>
+ #include <dirent.h>
+@@ -991,6 +992,25 @@ void TWPartition::Apply_TW_Flag(const unsigned flag, const char* str, const bool
  			// This flag isn't used by TWRP but is needed in 9.0 FBE decrypt
  			// fileencryption=ice:aes-256-heh
  			{
 +#ifdef TW_FBE_FORCE_INLINECRYPT
-+				// The ROM's fstab may come from a kernel whose ext4 has no
-+				// inlinecrypt option, but this kernel only decrypts file
-+				// contents through the inline crypto engine when /data is
-+				// mounted with it. Without it, reads return ciphertext.
++				// A ROM for a 4.4 kernel uses fileencryption=ice without
++				// inlinecrypt, which its ext4 rejects. From 4.19, ice contents
++				// only decrypt through blk-crypto when /data is mounted with
++				// inlinecrypt; without it, reads return ciphertext.
++				struct utsname uts;
++				unsigned kmajor = 0, kminor = 0;
++				if (uname(&uts) == 0)
++					sscanf(uts.release, "%u.%u", &kmajor, &kminor);
 +				if (Mount_Point == "/data" &&
++				    std::string(str).compare(0, 3, "ice") == 0 &&
++				    (kmajor > 4 || (kmajor == 4 && kminor >= 19)) &&
 +				    ("," + Mount_Options + ",").find(",inlinecrypt,") == std::string::npos) {
 +					if (!Mount_Options.empty())
 +						Mount_Options += ",";
