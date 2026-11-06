@@ -48,6 +48,10 @@ TARGET_KERNEL_ADDITIONAL_CONFIG := vendor/a9y18qlte.config
 TARGET_KERNEL_SOURCE := kernel/samsung/a9y18qlte-4.19
 TARGET_KERNEL_VERSION := 4.19
 TARGET_KERNEL_CLANG_COMPILE := true
+# Clang in 12.1 throws fatal errors on newer warning flags unless demoted;
+# also ensure GNU target triple is passed.
+TARGET_KERNEL_ADDITIONAL_FLAGS := KCFLAGS="-Wno-error=unknown-warning-option --target=aarch64-linux-gnu" KAFLAGS="--target=aarch64-linux-gnu"
+KERNEL_MAKE_FLAGS += $(TARGET_KERNEL_ADDITIONAL_FLAGS)
 #TARGET_KERNEL_CROSS_COMPILE_PREFIX := aarch64-linux-android-
 
 # Kernel
