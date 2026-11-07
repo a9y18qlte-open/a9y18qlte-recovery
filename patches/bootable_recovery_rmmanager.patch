@@ -1,5 +1,5 @@
 diff --git a/gui/theme/portrait_hdpi/pages/rmmanager.xml b/gui/theme/portrait_hdpi/pages/rmmanager.xml
-index 6bf90449..781fd5f5 100644
+index 6bf90449..e8c9c5f8 100644
 --- a/gui/theme/portrait_hdpi/pages/rmmanager.xml
 +++ b/gui/theme/portrait_hdpi/pages/rmmanager.xml
 @@ -41,7 +41,17 @@
@@ -34,3 +34,25 @@ index 6bf90449..781fd5f5 100644
  						${found}1;
  						${image_mounted}0;
  					else
+@@ -102,8 +116,9 @@
+ 			<action>
+ 				<condition var1="ftls_running" var2="0"/>
+ 				<condition var1="rmm_found" op="modified"/>
+-				<condition var1="rmm_found" op="!=" var2="1"/>
++				<condition var1="rmm_found" var2="0"/>
+ 				<condition var1="rmm_type" op="!=" var2="magisk"/>
++				<action function="set">rmm_found=-1</action>
+ 				<action function="overlay">dialog_modules_cannot_mount</action>
+ 				<action function="page">advanced</action>
+ 			</action>
+@@ -111,8 +126,9 @@
+ 			<action>
+ 				<condition var1="ftls_running" var2="0"/>
+ 				<condition var1="rmm_found" op="modified"/>
+-				<condition var1="rmm_found" op="!=" var2="1"/>
++				<condition var1="rmm_found" var2="0"/>
+ 				<condition var1="rmm_type" var2="magisk"/>
++				<action function="set">rmm_found=-1</action>
+ 				<action function="overlay">dialog_magisk_not_found</action>
+ 				<action function="page">advanced</action>
+ 			</action>
