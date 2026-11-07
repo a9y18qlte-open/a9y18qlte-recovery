@@ -40,12 +40,12 @@ ENABLE_CPUSETS := true
 ENABLE_SCHEDBOOST := true
 
 # Kernel
-# LineageOS SDM660 4.19 with the a9y18qlte fragment, bind mounted at
-# kernel/samsung/a9y18qlte-4.19; built like kmake419 (clang r416183b, LLVM
+# LineageOS SDM660 4.19 with the a9y18qlte fragment, located at
+# kernel/samsung/a9y18qlte; built like kmake419 (clang r416183b, LLVM
 # binutils for the thin LTO build)
 TARGET_KERNEL_CONFIG := vendor/sdm660-perf_defconfig
 TARGET_KERNEL_ADDITIONAL_CONFIG := vendor/a9y18qlte.config
-TARGET_KERNEL_SOURCE := kernel/samsung/a9y18qlte-4.19
+TARGET_KERNEL_SOURCE := kernel/samsung/a9y18qlte
 TARGET_KERNEL_VERSION := 4.19
 TARGET_KERNEL_CLANG_COMPILE := true
 # Clang in 12.1 throws fatal errors on newer warning flags unless demoted;
