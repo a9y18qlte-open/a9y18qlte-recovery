@@ -78,8 +78,12 @@ BOARD_USES_QCOM_HARDWARE := true
 # Workaround for error copying vendor files to recovery ramdisk
 TARGET_COPY_OUT_VENDOR := vendor
 
+# Init
+TARGET_INIT_VENDOR_LIB := libinit_a9y18qlte
+TARGET_RECOVERY_DEVICE_MODULES += libinit_a9y18qlte
+
 # Recovery
-TARGET_OTA_ASSERT_DEVICE := a9y18qlte
+TARGET_OTA_ASSERT_DEVICE := a9y18qlte,a9y18qltexx,a9y18qltezh,a9y18qltechn,a9y18qltekx,A920F,A9200,A920N,SM-A920F,SM-A9200,SM-A920N
 BOARD_HAS_LARGE_FILESYSTEM := true
 BOARD_HAS_NO_SELECT_BUTTON := true
 TARGET_USERIMAGES_USE_EXT4 := true

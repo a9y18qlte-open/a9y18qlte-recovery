@@ -18,7 +18,7 @@
 # 	Please maintain this if you use this script or any part of it
 #
 
-export FOX_TARGET_DEVICES="a9y18qlte,a9y18qltexx"
+export FOX_TARGET_DEVICES="a9y18qlte,a9y18qltexx,a9y18qltezh,a9y18qltechn,a9y18qltekx,A920F,A9200,A920N,SM-A920F,SM-A9200,SM-A920N"
 export TW_DEFAULT_LANGUAGE="en"
 export LC_ALL="C"
 export ALLOW_MISSING_DEPENDENCIES=true
