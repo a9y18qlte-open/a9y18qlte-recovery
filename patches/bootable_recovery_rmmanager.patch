@@ -1,0 +1,36 @@
+diff --git a/gui/theme/portrait_hdpi/pages/rmmanager.xml b/gui/theme/portrait_hdpi/pages/rmmanager.xml
+index 6bf90449..781fd5f5 100644
+--- a/gui/theme/portrait_hdpi/pages/rmmanager.xml
++++ b/gui/theme/portrait_hdpi/pages/rmmanager.xml
+@@ -41,7 +41,17 @@
+ 				<action function="set">rmm_type_path=%ksu_path%</action>
+ 				<action function="set">rmm_name={@ksu_modules}</action>
+ 				<action function="set">rmm_type_ver={@ksu_ver}</action>
+-				<action function="ftls">twrp xset rmm_ver=$(%ksu_path%/bin/ksud -V | awk '{print $2}')</action>
++				<action function="ftls">
++					ver=""
++					if [ -x /sbin/ksud ]; then
++						ver=$(/sbin/ksud -V | awk '{print $2}')
++					elif [ -x /data/adb/ksud ]; then
++						ver=$(/data/adb/ksud -V | awk '{print $2}')
++					elif [ -x "%ksu_path%/bin/ksud" ]; then
++						ver=$(%ksu_path%/bin/ksud -V | awk '{print $2}')
++					fi
++					twrp xset rmm_ver="$ver"
++				</action>
+ 				<action function="set">need_mount=1</action>
+ 			</action>
+ 
+@@ -81,7 +91,11 @@
+ 							${found}0;
+ 							exit 1;
+ 						fi
+-					elif [ -n "$(find "%rmm_path%" -mindepth 1 -maxdepth 1 -type d)" ]; then
++					elif [ -d "%rmm_path%" ]; then
++						${found}1;
++						${image_mounted}0;
++					elif [ -d "%rmm_type_path%" ]; then
++						mkdir -p "%rmm_path%";
+ 						${found}1;
+ 						${image_mounted}0;
+ 					else
