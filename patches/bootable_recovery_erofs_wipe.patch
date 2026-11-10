@@ -1,0 +1,13 @@
+diff --git a/partition.cpp b/partition.cpp
+index bd010eb2..808e7dd1 100644
+--- a/partition.cpp
++++ b/partition.cpp
+@@ -1942,6 +1942,8 @@ bool TWPartition::Wipe(string New_File_System) {
+ 			wiped = Wipe_FAT();
+ 		else if (New_File_System == "emmc")
+ 			wiped = BlkDiscard();
++		else if (New_File_System == "erofs")
++			wiped = Wipe_EXT4();
+ 		else {
+ 			LOGERR("Unable to wipe '%s' -- unknown file system '%s'\n", Mount_Point.c_str(), New_File_System.c_str());
+ 			return false;
