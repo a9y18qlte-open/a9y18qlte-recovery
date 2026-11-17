@@ -1,0 +1,103 @@
+name: Build and release OrangeFox
+
+on:
+  push:
+    tags:
+      - 'R*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      FOX: /home/runner/fox_12.1  # vendorsetup.sh reads ~/fox_12.1/Magisk.zip
+      DEVICE: a9y18qlte
+      MAGISK_VERSION: v30.7
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/local/share/boost /usr/share/swift
+          sudo docker image prune -af >/dev/null
+          df -h /
+
+      - name: Install build packages
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq bc bison build-essential ccache cpio curl flex g++-multilib gcc-multilib git gnupg gperf jq lib32z1-dev libelf-dev libncurses-dev libssl-dev libxml2-utils lz4 python3 rsync unzip xsltproc zip zlib1g-dev
+          sudo curl -sSfLo /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
+          sudo chmod +x /usr/local/bin/repo
+          git config --global user.name github-actions
+          git config --global user.email github-actions@users.noreply.github.com
+
+      - name: Sync OrangeFox 12.1
+        run: |
+          git clone --depth 1 https://gitlab.com/OrangeFox/sync.git ~/sync
+          cd ~/sync && ./orangefox_sync.sh --branch 12.1 --path "$FOX"
+
+      - name: Fetch device tree, dependencies and Magisk
+        working-directory: ${{ env.FOX }}
+        run: |
+          # full clone (small) so the release can name the branch holding the tag
+          git clone "https://github.com/$GITHUB_REPOSITORY" device/samsung/$DEVICE
+          git -C device/samsung/$DEVICE checkout -q "$GITHUB_SHA"
+          # roomservice ignores repo sync failures, so clone twrp.dependencies directly
+          jq -r '.[] | "\(if .remote == "TeamWin" then "TeamWin/" else "" end)\(.repository) \(.target_path) \(.branch)"' device/samsung/$DEVICE/twrp.dependencies |
+          while read -r repo path branch; do
+            [ -d "$path" ] || git clone --depth 1 -b "$branch" "https://github.com/$repo" "$path"
+          done
+          curl -sSfLo Magisk.zip "https://github.com/topjohnwu/Magisk/releases/download/$MAGISK_VERSION/Magisk-$MAGISK_VERSION.apk"
+
+      - name: Build
+        working-directory: ${{ env.FOX }}
+        run: |
+          set +eu
+          source build/envsetup.sh
+          lunch twrp_$DEVICE-eng || exit 1
+          set -e
+          mka -j"$(nproc --all)" adbd recoveryimage
+
+      - name: Collect release files
+        id: files
+        working-directory: ${{ env.FOX }}
+        run: |
+          kver=$(make -s -C kernel/samsung/$DEVICE kernelversion)
+          mkdir ~/release && cd out/target/product/$DEVICE
+          for f in OrangeFox-*-Unofficial-$DEVICE.img OrangeFox-*-Unofficial-$DEVICE.img.tar OrangeFox-*-Unofficial-$DEVICE.zip; do
+            [ -f "$f" ] || { echo "missing $f"; exit 1; }
+            cp "$f" ~/release/"${f/Unofficial-/Unofficial-$kver-}"
+          done
+          cd ~/release
+          for f in *.img *.zip; do md5sum "$f" > "$f.md5"; done
+          ls -l
+          echo "kver=$kver" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          KVER: ${{ steps.files.outputs.kver }}
+        run: |
+          cd "$FOX/device/samsung/$DEVICE"
+          branch=$(git branch -r --contains "$GITHUB_SHA" --format='%(refname:lstrip=3)' | grep -vx HEAD | head -1)
+          kbranch=$(jq -r ".[] | select(.target_path == \"kernel/samsung/$DEVICE\") | .branch" twrp.dependencies)
+          cat > ~/notes.md << EOF
+          # OrangeFox Recovery $TAG - UNOFFICIAL (Linux ${KVER%.*})
+
+          **Device:** Samsung Galaxy A9 2018 (\`SM-A920F\`, \`SM-A9200\`, \`SM-A920N\`)\\
+          **Kernel:** $KVER (\`$kbranch\`)\\
+          **Branch:** \`$branch\`
+
+          ### Notes
+          * Supports File-Based Encryption (FBE) decryption on Linux ${KVER%.*} custom ROMs.
+          * Classic non-A/B recovery layout (flash via OrangeFox recovery ZIP or Odin \`.tar\`).
+          * Untested on stock firmware/vendor which uses \`forceencrypt\` in fstab.
+          * Developed with AI assistance.
+
+          ### Credits
+          * OrangeFox & TWRP Teams
+          * @dr_schr_0dinger for integrating FBE in initial A10/A12 trees
+          EOF
+          gh release create "$TAG" ~/release/* -R "$GITHUB_REPOSITORY" --title "OrangeFox $TAG - UNOFFICIAL | $branch" --notes-file ~/notes.md
