@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - 'R*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create, e.g. R12.0_4 (empty = build only, files kept as run artifact)'
+        required: false
 
 permissions:
   contents: write
@@ -74,10 +79,18 @@ jobs:
           ls -l
           echo "kver=$kver" >> "$GITHUB_OUTPUT"
 
+      - name: Upload build artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.tag == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: orangefox-${{ env.DEVICE }}-${{ github.sha }}
+          path: ~/release/*
+
       - name: Publish release
+        if: github.event_name == 'push' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
           KVER: ${{ steps.files.outputs.kver }}
         run: |
           cd "$FOX/device/samsung/$DEVICE"
@@ -100,4 +113,4 @@ jobs:
           * OrangeFox & TWRP Teams
           * @dr_schr_0dinger for integrating FBE in initial A10/A12 trees
           EOF
-          gh release create "$TAG" ~/release/* -R "$GITHUB_REPOSITORY" --title "OrangeFox $TAG - UNOFFICIAL | $branch" --notes-file ~/notes.md
+          gh release create "$TAG" ~/release/* -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "OrangeFox $TAG - UNOFFICIAL | $branch" --notes-file ~/notes.md
