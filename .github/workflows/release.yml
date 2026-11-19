@@ -75,6 +75,8 @@ jobs:
             cp "$f" ~/release/"${f/Unofficial-/Unofficial-$kver-}"
           done
           cd ~/release
+          # stale signature entries are dropped with the tar, leaving an unsigned zip
+          zip -qd OrangeFox-*.zip '*.img.tar' META-INF/MANIFEST.MF META-INF/CERT.SF META-INF/CERT.RSA
           for f in *.img *.zip; do md5sum "$f" > "$f.md5"; done
           ls -l
           echo "kver=$kver" >> "$GITHUB_OUTPUT"
@@ -113,4 +115,6 @@ jobs:
           * OrangeFox & TWRP Teams
           * @dr_schr_0dinger for integrating FBE in initial A10/A12 trees
           EOF
+          # same tag: drop the old release but keep the tag
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 && gh release delete "$TAG" -y -R "$GITHUB_REPOSITORY"
           gh release create "$TAG" ~/release/* -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "OrangeFox $TAG - UNOFFICIAL | $branch" --notes-file ~/notes.md
