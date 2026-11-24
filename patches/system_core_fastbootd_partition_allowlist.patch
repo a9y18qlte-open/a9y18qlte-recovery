@@ -1,0 +1,64 @@
+diff --git a/fastboot/device/commands.cpp b/fastboot/device/commands.cpp
+index 980f20a..946b1b2 100644
+--- a/fastboot/device/commands.cpp
++++ b/fastboot/device/commands.cpp
+@@ -208,6 +208,9 @@ bool EraseHandler(FastbootDevice* device, const std::vector<std::string>& args)
+     }
+ 
+     const auto& partition_name = args[1];
++    if (!IsPartitionWritable(partition_name)) {
++        return device->WriteFail("Partition " + partition_name + " is not writable");
++    }
+     if (IsProtectedPartitionDuringMerge(device, partition_name)) {
+         auto message = "Cannot erase " + partition_name + " while a snapshot update is in progress";
+         return device->WriteFail(message);
+@@ -550,6 +553,9 @@ bool FlashHandler(FastbootDevice* device, const std::vector<std::string>& args)
+     }
+ 
+     const auto& partition_name = args[1];
++    if (!IsPartitionWritable(partition_name)) {
++        return device->WriteFail("Partition " + partition_name + " is not writable");
++    }
+     if (IsProtectedPartitionDuringMerge(device, partition_name)) {
+         auto message = "Cannot flash " + partition_name + " while a snapshot update is in progress";
+         return device->WriteFail(message);
+diff --git a/fastboot/device/utility.cpp b/fastboot/device/utility.cpp
+index cc0f0aa..1881a7e 100644
+--- a/fastboot/device/utility.cpp
++++ b/fastboot/device/utility.cpp
+@@ -17,6 +17,7 @@
+ #include "utility.h"
+ 
+ #include <dirent.h>
++#include <algorithm>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+ #include <unistd.h>
+@@ -77,6 +78,14 @@ bool OpenLogicalPartition(FastbootDevice* device, const std::string& partition_n
+ 
+ }  // namespace
+ 
++bool IsPartitionWritable(const std::string& name) {
++    const auto allowed = android::base::Split(
++            android::base::GetProperty("fastbootd.writable",
++                                       "boot,recovery,system,vendor,odm,userdata,cache,vbmeta"),
++            ",");
++    return std::find(allowed.begin(), allowed.end(), name) != allowed.end();
++}
++
+ bool OpenPartition(FastbootDevice* device, const std::string& name, PartitionHandle* handle,
+                    bool read) {
+     // We prioritize logical partitions over physical ones, and do this
+diff --git a/fastboot/device/utility.h b/fastboot/device/utility.h
+index c2646d7..bc4fbde 100644
+--- a/fastboot/device/utility.h
++++ b/fastboot/device/utility.h
+@@ -80,6 +80,8 @@ bool LogicalPartitionExists(FastbootDevice* device, const std::string& name,
+ bool OpenPartition(FastbootDevice* device, const std::string& name, PartitionHandle* handle,
+                    bool read = false);
+ 
++bool IsPartitionWritable(const std::string& name);
++
+ bool GetSlotNumber(const std::string& slot, android::hardware::boot::V1_0::Slot* number);
+ std::vector<std::string> ListPartitions(FastbootDevice* device);
+ bool GetDeviceLockStatus();

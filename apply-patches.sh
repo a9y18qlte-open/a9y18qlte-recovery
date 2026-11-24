@@ -73,6 +73,13 @@ if [ -d "${VOLD_DIR}" ]; then
     reapply "${VOLD_DIR}" "${SCRIPT_DIR}"/patches/system_vold*.patch
 fi
 
+# 3. system/core
+CORE_DIR="${ROOT_DIR}/system/core"
+if [ -d "${CORE_DIR}" ]; then
+    echo "system/core:"
+    reapply "${CORE_DIR}" "${SCRIPT_DIR}"/patches/system_core*.patch
+fi
+
 if [ "${FAILED}" -ne 0 ]; then
     echo "=== Done, with FAILURES ==="
     exit 1
