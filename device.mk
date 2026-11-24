@@ -24,6 +24,11 @@ PRODUCT_PACKAGES += \
         android.hardware.keymaster@3.0-impl \
         libkeymaster3device
 
+# fastbootd
+PRODUCT_PACKAGES += \
+        fastbootd \
+        android.hardware.fastboot@1.1-impl-mock
+
 # Crypto
 TW_INCLUDE_CRYPTO := true
 BOARD_USES_QCOM_FBE_DECRYPTION := true

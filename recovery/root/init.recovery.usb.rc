@@ -63,6 +63,9 @@ on boot
     write /config/usb_gadget/g1/os_desc/qw_sign "MSFT100"
     symlink /config/usb_gadget/g1/configs/b.1 /config/usb_gadget/g1/os_desc/b.1
     mount functionfs adb /dev/usb-ffs/adb uid=2000,gid=2000
+    mkdir /dev/usb-ffs/fastboot 0770 system system
+    mkdir /config/usb_gadget/g1/functions/ffs.fastboot
+    mount functionfs fastboot /dev/usb-ffs/fastboot rmode=0770,fmode=0660,uid=1000,gid=1000
     write /sys/class/android_usb/android0/f_ffs/aliases adb
 
 on property:sys.usb.config=none
@@ -102,6 +105,23 @@ on property:sys.usb.ffs.ready=1 && property:sys.usb.config=sideload
     write /config/usb_gadget/g1/idVendor 0x04E8
     write /config/usb_gadget/g1/idProduct 0x6860
     symlink /config/usb_gadget/g1/functions/ffs.adb /config/usb_gadget/g1/configs/b.1/f1
+    write /config/usb_gadget/g1/UDC ${sys.usb.controller}
+    setprop sys.usb.state ${sys.usb.config}
+
+on property:sys.usb.config=fastboot
+    start health-hal-2-1
+    start fastbootd
+
+on property:sys.usb.ffs.ready=1 && property:sys.usb.config=fastboot
+    write /config/usb_gadget/g1/configs/b.1/strings/0x409/configuration "fastboot"
+    rm /config/usb_gadget/g1/configs/b.1/f1
+    rm /config/usb_gadget/g1/configs/b.1/f2
+    rm /config/usb_gadget/g1/configs/b.1/f3
+    rm /config/usb_gadget/g1/configs/b.1/f4
+    rm /config/usb_gadget/g1/configs/b.1/f5
+    write /config/usb_gadget/g1/idVendor 0x18D1
+    write /config/usb_gadget/g1/idProduct 0x4EE0
+    symlink /config/usb_gadget/g1/functions/ffs.fastboot /config/usb_gadget/g1/configs/b.1/f1
     write /config/usb_gadget/g1/UDC ${sys.usb.controller}
     setprop sys.usb.state ${sys.usb.config}
 
