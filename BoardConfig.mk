@@ -134,6 +134,7 @@ TW_FBE_KEEP_DATA_MOUNTED := true
 TW_FBE_FORCE_INLINECRYPT := true
 TW_CUSTOM_CPU_TEMP_PATH := "/sys/devices/virtual/thermal/thermal_zone1/temp"
 TW_NO_REBOOT_BOOTLOADER := true
+TW_INCLUDE_FASTBOOTD := true
 TW_HAS_DOWNLOAD_MODE := true
 TW_EXCLUDE_SUPERSU := true
 TWRP_INCLUDE_LOGCAT := true
