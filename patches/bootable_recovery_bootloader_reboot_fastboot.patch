@@ -1,0 +1,18 @@
+diff --git a/bootloader_message/bootloader_message.cpp b/bootloader_message/bootloader_message.cpp
+index b70d54e5..441e45e3 100755
+--- a/bootloader_message/bootloader_message.cpp
++++ b/bootloader_message/bootloader_message.cpp
+@@ -227,11 +227,8 @@ bool write_reboot_bootloader(std::string* err) {
+   if (!read_bootloader_message(&boot, err)) {
+     return false;
+   }
+-  if (boot.command[0] != '\0') {
+-    *err = "Bootloader command pending.";
+-    return false;
+-  }
+-  strlcpy(boot.command, "bootonce-bootloader", sizeof(boot.command));
++  strlcpy(boot.command, "boot-recovery", sizeof(boot.command));
++  strlcpy(boot.recovery, "recovery\n--fastboot\n", sizeof(boot.recovery));
+   return write_bootloader_message(boot, err);
+ }
+ 
